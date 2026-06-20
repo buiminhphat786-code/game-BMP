@@ -3,37 +3,39 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; overflow: hidden; background: #87CEEB; }
-        #game-container { position: relative; width: 100vw; height: 100vh; }
-        #bg-forest { position: absolute; bottom: 0; width: 200%; height: 100%; background: linear-gradient(to top, #228B22, #87CEEB); }
-        #player { position: absolute; bottom: 50px; left: 50px; width: 80px; height: 100px; background: pink; border-radius: 10px; }
-        .controls { position: absolute; bottom: 20px; left: 20px; z-index: 10; }
-        button { width: 70px; height: 70px; font-size: 30px; border-radius: 50%; background: rgba(255,255,255,0.5); border: none; }
+        body { margin: 0; background: #000; overflow: hidden; }
+        #gameCanvas { width: 100vw; height: 100vh; display: block; }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="bg-forest"></div>
-        <div id="player"></div>
-        <div class="controls">
-            <button ontouchstart="move(-20)" ontouchend="stop()">◀</button>
-            <button ontouchstart="move(20)" ontouchend="stop()">▶</button>
-        </div>
-    </div>
+    <canvas id="gameCanvas"></canvas>
     <script>
-        let player = document.getElementById('player');
-        let posX = 50;
-        let speed = 0;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
-        function move(s) { speed = s; }
-        function stop() { speed = 0; }
+        let player = { x: 50, y: 200, size: 40, vy: 0 };
 
-        function update() {
-            posX += speed;
-            player.style.left = posX + 'px';
-            requestAnimationFrame(update);
+        function draw() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Vẽ nhân vật với hiệu ứng Neon
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00ffcc';
+            ctx.fillStyle = '#00ffcc';
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            
+            // Vật lý đơn giản
+            player.vy += 0.8;
+            player.y += player.vy;
+            if (player.y > canvas.height - 100) { player.y = canvas.height - 100; player.vy = 0; }
+            
+            requestAnimationFrame(draw);
         }
-        update();
+
+        window.addEventListener('touchstart', () => { if (player.y >= canvas.height - 100) player.vy = -15; });
+        draw();
     </script>
 </body>
 </html>
