@@ -3,38 +3,64 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        body { margin: 0; background: #000; overflow: hidden; }
-        #gameCanvas { width: 100vw; height: 100vh; display: block; }
+        body { 
+            margin: 0; overflow: hidden;
+            background-image: url('IMG_0518.png'); 
+            background-size: cover; 
+            background-position: center;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
+    <audio id="bgMusic" loop>
+        <source src="https://files.catbox.moe/77meij.mp3" type="audio/mp3">
+    </audio>
+
     <canvas id="gameCanvas"></canvas>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const music = document.getElementById('bgMusic');
+        
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight;
 
-        let player = { x: 50, y: 200, size: 40, vy: 0 };
+        let player = { x: 50, y: 300, size: 50, vy: 0 };
+
+        // Xử lý chạm màn hình
+        window.addEventListener('touchstart', (e) => {
+            // Phát nhạc nếu đang tắt
+            if (music.paused) {
+                music.play().catch(err => console.log("Cần chạm để phát nhạc"));
+            }
+            
+            // Logic nhảy
+            if (player.y >= canvas.height - 150) {
+                player.vy = -15;
+            }
+        });
 
         function draw() {
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Vẽ nhân vật với hiệu ứng Neon
+            // Vẽ nhân vật
+            ctx.fillStyle = '#ffccff';
             ctx.shadowBlur = 15;
-            ctx.shadowColor = '#00ffcc';
-            ctx.fillStyle = '#00ffcc';
+            ctx.shadowColor = '#ff00ff';
             ctx.fillRect(player.x, player.y, player.size, player.size);
             
-            // Vật lý đơn giản
+            // Physics
             player.vy += 0.8;
             player.y += player.vy;
-            if (player.y > canvas.height - 100) { player.y = canvas.height - 100; player.vy = 0; }
+            if (player.y > canvas.height - 150) { 
+                player.y = canvas.height - 150; 
+                player.vy = 0; 
+            }
             
             requestAnimationFrame(draw);
         }
-
-        window.addEventListener('touchstart', () => { if (player.y >= canvas.height - 100) player.vy = -15; });
         draw();
     </script>
 </body>
