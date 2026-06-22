@@ -21,16 +21,23 @@
     </style>
 </head>
 <body>
-    <audio id="bgMusic" loop>
+    <!-- Nhạc 1: Phát trước, không lặp -->
+    <audio id="music1">
+        <source src="https://files.catbox.moe/53aqp9.mp3" type="audio/mp3">
+    </audio>
+    <!-- Nhạc 2: Phát sau, lặp vĩnh viễn -->
+    <audio id="music2" loop>
         <source src="https://files.catbox.moe/77meij.mp3" type="audio/mp3">
     </audio>
+
     <div id="score">Điểm: 0</div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const music = document.getElementById('bgMusic');
+        const music1 = document.getElementById('music1');
+        const music2 = document.getElementById('music2');
         const scoreDisplay = document.getElementById('score');
         
         canvas.width = window.innerWidth; 
@@ -48,15 +55,31 @@
 
         let obstacles = [];
         let score = 0;
-        let gameSpeed = 6;
+        let gameSpeed = 5;
         let gameOver = false;
+        let musicStarted = false;
+
+        // Khi nhạc 1 kết thúc, phát nhạc 2
+        music1.addEventListener('ended', () => {
+            music2.play().catch(() => {});
+        });
+
+        function startMusic() {
+            if (!musicStarted) {
+                musicStarted = true;
+                music1.play().catch(() => {
+                    // Nếu không phát được nhạc 1, phát thẳng nhạc 2
+                    music2.play().catch(() => {});
+                });
+            }
+        }
 
         function spawnObstacle() {
-            let height = Math.random() * 30 + 25;
+            let height = Math.random() * 25 + 20;
             obstacles.push({
                 x: canvas.width,
                 y: canvas.height * 0.7 + 40 - height,
-                width: 25,
+                width: 22,
                 height: height,
                 color: '#ff1493'
             });
@@ -65,7 +88,7 @@
         function resetGame() {
             obstacles = [];
             score = 0;
-            gameSpeed = 6;
+            gameSpeed = 5;
             player.y = canvas.height * 0.7 - 20;
             player.vy = 0;
             player.grounded = true;
@@ -75,11 +98,11 @@
 
         window.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            if (music.paused) music.play().catch(() => {});
+            startMusic();
             if (gameOver) {
                 resetGame();
             } else if (player.grounded) {
-                player.vy = -13;
+                player.vy = -12;
                 player.grounded = false;
             }
         });
@@ -87,11 +110,11 @@
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' || e.code === 'ArrowUp') {
                 e.preventDefault();
-                if (music.paused) music.play().catch(() => {});
+                startMusic();
                 if (gameOver) {
                     resetGame();
                 } else if (player.grounded) {
-                    player.vy = -13;
+                    player.vy = -12;
                     player.grounded = false;
                 }
             }
@@ -251,11 +274,11 @@
                     obstacles.splice(i, 1);
                     score += 10;
                     scoreDisplay.textContent = `Điểm: ${score}`;
-                    if (score % 50 === 0) gameSpeed += 0.5;
+                    if (score % 50 === 0) gameSpeed += 0.3;
                 }
             }
 
-            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width * 0.6) {
+            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width * 0.3) {
                 spawnObstacle();
             }
         }
