@@ -21,11 +21,9 @@
     </style>
 </head>
 <body>
-    <!-- Nhạc 1: Phát trước, không lặp -->
     <audio id="music1">
         <source src="https://files.catbox.moe/53aqp9.mp3" type="audio/mp3">
     </audio>
-    <!-- Nhạc 2: Phát sau, lặp vĩnh viễn -->
     <audio id="music2" loop>
         <source src="https://files.catbox.moe/77meij.mp3" type="audio/mp3">
     </audio>
@@ -59,7 +57,6 @@
         let gameOver = false;
         let musicStarted = false;
 
-        // Khi nhạc 1 kết thúc, phát nhạc 2
         music1.addEventListener('ended', () => {
             music2.play().catch(() => {});
         });
@@ -68,18 +65,17 @@
             if (!musicStarted) {
                 musicStarted = true;
                 music1.play().catch(() => {
-                    // Nếu không phát được nhạc 1, phát thẳng nhạc 2
                     music2.play().catch(() => {});
                 });
             }
         }
 
         function spawnObstacle() {
-            let height = Math.random() * 25 + 20;
+            let height = Math.random() * 30 + 25;
             obstacles.push({
                 x: canvas.width,
-                y: canvas.height * 0.7 + 40 - height,
-                width: 22,
+                y: canvas.height * 0.7 + 40, // Đáy của gai
+                width: 30,
                 height: height,
                 color: '#ff1493'
             });
@@ -102,7 +98,7 @@
             if (gameOver) {
                 resetGame();
             } else if (player.grounded) {
-                player.vy = -12;
+                player.vy = -15;
                 player.grounded = false;
             }
         });
@@ -114,11 +110,49 @@
                 if (gameOver) {
                     resetGame();
                 } else if (player.grounded) {
-                    player.vy = -12;
+                    player.vy = -15;
                     player.grounded = false;
                 }
             }
         });
+
+        function drawSpike(x, y, width, height, color) {
+            // Bóng đổ
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 3);
+            ctx.lineTo(x + width/2 + 3, y - height + 3);
+            ctx.lineTo(x + width + 3, y + 3);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Gai chính
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ff1493';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + width/2, y - height);
+            ctx.lineTo(x + width, y);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Viền trắng
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 0;
+            ctx.stroke();
+            
+            // Đường gân giữa gai
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(x + width/2, y);
+            ctx.lineTo(x + width/2, y - height + 5);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+        }
 
         function drawGirl(x, y, size, frame, name) {
             ctx.save();
@@ -126,17 +160,14 @@
             
             let bounce = player.grounded ? Math.sin(frame * 0.3) * 3 : -5;
             
-            // Chân
             ctx.fillStyle = '#ffccd5';
             ctx.fillRect(-size*0.3, size*0.2, size*0.2, size*0.5 + bounce);
             ctx.fillRect(size*0.1, size*0.2, size*0.2, size*0.5 - bounce);
             
-            // Giày
             ctx.fillStyle = '#ff1493';
             ctx.fillRect(-size*0.35, size*0.7 + bounce, size*0.3, size*0.15);
             ctx.fillRect(size*0.05, size*0.7 - bounce, size*0.3, size*0.15);
             
-            // Váy hồng
             ctx.fillStyle = '#ff69b4';
             ctx.beginPath();
             ctx.moveTo(-size*0.25, -size*0.1);
@@ -149,17 +180,14 @@
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Áo trắng
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(-size*0.2, -size*0.35, size*0.4, size*0.3);
             ctx.strokeStyle = '#ffb6c1';
             ctx.strokeRect(-size*0.2, -size*0.35, size*0.4, size*0.3);
             
-            // Cổ
             ctx.fillStyle = '#ffe4e1';
             ctx.fillRect(-size*0.08, -size*0.45, size*0.16, size*0.12);
             
-            // Đầu
             ctx.fillStyle = '#ffe4e1';
             ctx.beginPath();
             ctx.arc(0, -size*0.6, size*0.35, 0, Math.PI * 2);
@@ -167,7 +195,6 @@
             ctx.strokeStyle = '#ffb6c1';
             ctx.stroke();
             
-            // Tóc
             ctx.fillStyle = '#4a0e1c';
             ctx.beginPath();
             ctx.arc(0, -size*0.7, size*0.35, Math.PI, Math.PI * 2);
@@ -176,7 +203,6 @@
             ctx.fillRect(size*0.25, -size*0.65, size*0.1, size*0.3);
             ctx.fillRect(-size*0.05, -size*0.95, size*0.1, size*0.2);
             
-            // Nơ hồng
             ctx.fillStyle = '#ff1493';
             ctx.beginPath();
             ctx.arc(-size*0.2, -size*0.9, size*0.08, 0, Math.PI * 2);
@@ -186,7 +212,6 @@
             ctx.fill();
             ctx.fillRect(-size*0.15, -size*0.95, size*0.1, size*0.1);
             
-            // Mắt
             ctx.fillStyle = '#2c1810';
             ctx.beginPath();
             ctx.arc(-size*0.12, -size*0.65, size*0.06, 0, Math.PI * 2);
@@ -202,7 +227,6 @@
             ctx.arc(size*0.14, -size*0.67, size*0.02, 0, Math.PI * 2);
             ctx.fill();
             
-            // Má hồng
             ctx.fillStyle = '#ffb6c1';
             ctx.globalAlpha = 0.5;
             ctx.beginPath();
@@ -213,14 +237,12 @@
             ctx.fill();
             ctx.globalAlpha = 1;
             
-            // Miệng cười
             ctx.strokeStyle = '#ff1493';
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.arc(0, -size*0.5, size*0.08, 0.1, Math.PI - 0.1);
             ctx.stroke();
             
-            // Tay
             ctx.fillStyle = '#ffe4e1';
             let armSwing = Math.sin(frame * 0.5) * 15;
             ctx.save();
@@ -234,7 +256,6 @@
             ctx.fillRect(0, 0, size*0.1, size*0.35);
             ctx.restore();
             
-            // Tên nhân vật
             ctx.fillStyle = '#ff1493';
             ctx.font = 'bold 14px Arial';
             ctx.textAlign = 'center';
@@ -263,10 +284,12 @@
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 obstacles[i].x -= gameSpeed;
                 
+                // Va chạm với gai (hình tam giác)
+                let spikeTopY = obstacles[i].y - obstacles[i].height;
                 if (player.x < obstacles[i].x + obstacles[i].width &&
                     player.x + player.size > obstacles[i].x &&
-                    player.y < obstacles[i].y + obstacles[i].height &&
-                    player.y + player.size > obstacles[i].y) {
+                    player.y < obstacles[i].y &&
+                    player.y + player.size > spikeTopY) {
                     gameOver = true;
                 }
                 
@@ -304,18 +327,10 @@
             ctx.fillStyle = '#ff69b4';
             ctx.fillRect(0, canvas.height * 0.7 + 40, canvas.width, 6);
             
+            // Vẽ gai
             for (let obs of obstacles) {
-                ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                ctx.fillRect(obs.x + 3, obs.y + 3, obs.width, obs.height);
-                ctx.fillStyle = obs.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = '#ff1493';
-                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+                drawSpike(obs.x, obs.y, obs.width, obs.height, obs.color);
             }
-            ctx.shadowBlur = 0;
             
             drawGirl(player.x, player.y, player.size, player.runFrame, player.name);
             
