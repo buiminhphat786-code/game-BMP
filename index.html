@@ -5,63 +5,317 @@
     <style>
         body { 
             margin: 0; overflow: hidden;
-            background-image: url('IMG_0518.png'); 
-            background-size: cover; 
-            background-position: center;
+            background-color: #ffb6c1;
         }
         canvas { display: block; width: 100vw; height: 100vh; }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            color: #ff1493;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
     <audio id="bgMusic" loop>
         <source src="https://files.catbox.moe/77meij.mp3" type="audio/mp3">
     </audio>
-
+    <div id="score">Điểm: 0</div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const music = document.getElementById('bgMusic');
+        const scoreDisplay = document.getElementById('score');
         
         canvas.width = window.innerWidth; 
         canvas.height = window.innerHeight;
 
-        let player = { x: 50, y: 300, size: 50, vy: 0 };
+        let player = { 
+            x: canvas.width * 0.2, 
+            y: canvas.height * 0.7 - 20, 
+            size: 50, 
+            vy: 0,
+            grounded: true,
+            runFrame: 0,
+            name: "Bảo Châm"
+        };
 
-        // Xử lý chạm màn hình
+        let obstacles = [];
+        let score = 0;
+        let gameSpeed = 6;
+        let gameOver = false;
+
+        function spawnObstacle() {
+            let height = Math.random() * 30 + 25;
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height * 0.7 + 40 - height,
+                width: 25,
+                height: height,
+                color: '#ff1493'
+            });
+        }
+
+        function resetGame() {
+            obstacles = [];
+            score = 0;
+            gameSpeed = 6;
+            player.y = canvas.height * 0.7 - 20;
+            player.vy = 0;
+            player.grounded = true;
+            player.runFrame = 0;
+            gameOver = false;
+        }
+
         window.addEventListener('touchstart', (e) => {
-            // Phát nhạc nếu đang tắt
-            if (music.paused) {
-                music.play().catch(err => console.log("Cần chạm để phát nhạc"));
-            }
-            
-            // Logic nhảy
-            if (player.y >= canvas.height - 150) {
-                player.vy = -15;
+            e.preventDefault();
+            if (music.paused) music.play().catch(() => {});
+            if (gameOver) {
+                resetGame();
+            } else if (player.grounded) {
+                player.vy = -13;
+                player.grounded = false;
             }
         });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                if (music.paused) music.play().catch(() => {});
+                if (gameOver) {
+                    resetGame();
+                } else if (player.grounded) {
+                    player.vy = -13;
+                    player.grounded = false;
+                }
+            }
+        });
+
+        function drawGirl(x, y, size, frame, name) {
+            ctx.save();
+            ctx.translate(x + size/2, y + size/2);
+            
+            let bounce = player.grounded ? Math.sin(frame * 0.3) * 3 : -5;
+            
+            // Chân
+            ctx.fillStyle = '#ffccd5';
+            ctx.fillRect(-size*0.3, size*0.2, size*0.2, size*0.5 + bounce);
+            ctx.fillRect(size*0.1, size*0.2, size*0.2, size*0.5 - bounce);
+            
+            // Giày
+            ctx.fillStyle = '#ff1493';
+            ctx.fillRect(-size*0.35, size*0.7 + bounce, size*0.3, size*0.15);
+            ctx.fillRect(size*0.05, size*0.7 - bounce, size*0.3, size*0.15);
+            
+            // Váy hồng
+            ctx.fillStyle = '#ff69b4';
+            ctx.beginPath();
+            ctx.moveTo(-size*0.25, -size*0.1);
+            ctx.lineTo(size*0.25, -size*0.1);
+            ctx.lineTo(size*0.4, size*0.3);
+            ctx.lineTo(-size*0.4, size*0.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#ff1493';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Áo trắng
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-size*0.2, -size*0.35, size*0.4, size*0.3);
+            ctx.strokeStyle = '#ffb6c1';
+            ctx.strokeRect(-size*0.2, -size*0.35, size*0.4, size*0.3);
+            
+            // Cổ
+            ctx.fillStyle = '#ffe4e1';
+            ctx.fillRect(-size*0.08, -size*0.45, size*0.16, size*0.12);
+            
+            // Đầu
+            ctx.fillStyle = '#ffe4e1';
+            ctx.beginPath();
+            ctx.arc(0, -size*0.6, size*0.35, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffb6c1';
+            ctx.stroke();
+            
+            // Tóc
+            ctx.fillStyle = '#4a0e1c';
+            ctx.beginPath();
+            ctx.arc(0, -size*0.7, size*0.35, Math.PI, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-size*0.35, -size*0.65, size*0.1, size*0.3);
+            ctx.fillRect(size*0.25, -size*0.65, size*0.1, size*0.3);
+            ctx.fillRect(-size*0.05, -size*0.95, size*0.1, size*0.2);
+            
+            // Nơ hồng
+            ctx.fillStyle = '#ff1493';
+            ctx.beginPath();
+            ctx.arc(-size*0.2, -size*0.9, size*0.08, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(-size*0.05, -size*0.9, size*0.08, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(-size*0.15, -size*0.95, size*0.1, size*0.1);
+            
+            // Mắt
+            ctx.fillStyle = '#2c1810';
+            ctx.beginPath();
+            ctx.arc(-size*0.12, -size*0.65, size*0.06, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(size*0.12, -size*0.65, size*0.06, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(-size*0.1, -size*0.67, size*0.02, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(size*0.14, -size*0.67, size*0.02, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Má hồng
+            ctx.fillStyle = '#ffb6c1';
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(-size*0.22, -size*0.55, size*0.05, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(size*0.22, -size*0.55, size*0.05, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Miệng cười
+            ctx.strokeStyle = '#ff1493';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, -size*0.5, size*0.08, 0.1, Math.PI - 0.1);
+            ctx.stroke();
+            
+            // Tay
+            ctx.fillStyle = '#ffe4e1';
+            let armSwing = Math.sin(frame * 0.5) * 15;
+            ctx.save();
+            ctx.translate(-size*0.25, -size*0.2);
+            ctx.rotate(armSwing * Math.PI / 180);
+            ctx.fillRect(0, 0, size*0.1, size*0.35);
+            ctx.restore();
+            ctx.save();
+            ctx.translate(size*0.15, -size*0.2);
+            ctx.rotate(-armSwing * Math.PI / 180);
+            ctx.fillRect(0, 0, size*0.1, size*0.35);
+            ctx.restore();
+            
+            // Tên nhân vật
+            ctx.fillStyle = '#ff1493';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#ffffff';
+            ctx.fillText(name, 0, -size*1.1);
+            ctx.shadowBlur = 0;
+            
+            ctx.restore();
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            player.runFrame++;
+            player.vy += 0.8;
+            player.y += player.vy;
+            
+            let groundY = canvas.height * 0.7 + 40 - 20;
+            if (player.y >= groundY) {
+                player.y = groundY;
+                player.vy = 0;
+                player.grounded = true;
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+                
+                if (player.x < obstacles[i].x + obstacles[i].width &&
+                    player.x + player.size > obstacles[i].x &&
+                    player.y < obstacles[i].y + obstacles[i].height &&
+                    player.y + player.size > obstacles[i].y) {
+                    gameOver = true;
+                }
+                
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                    scoreDisplay.textContent = `Điểm: ${score}`;
+                    if (score % 50 === 0) gameSpeed += 0.5;
+                }
+            }
+
+            if (obstacles.length === 0 || obstacles[obstacles.length - 1].x < canvas.width * 0.6) {
+                spawnObstacle();
+            }
+        }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Vẽ nhân vật
-            ctx.fillStyle = '#ffccff';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff00ff';
-            ctx.fillRect(player.x, player.y, player.size, player.size);
+            let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#ffb6c1');
+            gradient.addColorStop(1, '#ff69b4');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Physics
-            player.vy += 0.8;
-            player.y += player.vy;
-            if (player.y > canvas.height - 150) { 
-                player.y = canvas.height - 150; 
-                player.vy = 0; 
+            for (let i = 0; i < canvas.width; i += 40) {
+                ctx.fillStyle = '#ff1493';
+                ctx.globalAlpha = 0.08;
+                ctx.fillRect(i, 0, 1, canvas.height);
             }
+            ctx.globalAlpha = 1;
             
-            requestAnimationFrame(draw);
+            ctx.fillStyle = '#ff1493';
+            ctx.fillRect(0, canvas.height * 0.7 + 40, canvas.width, 12);
+            ctx.fillStyle = '#ff69b4';
+            ctx.fillRect(0, canvas.height * 0.7 + 40, canvas.width, 6);
+            
+            for (let obs of obstacles) {
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(obs.x + 3, obs.y + 3, obs.width, obs.height);
+                ctx.fillStyle = obs.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff1493';
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+            }
+            ctx.shadowBlur = 0;
+            
+            drawGirl(player.x, player.y, player.size, player.runFrame, player.name);
+            
+            if (gameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game Over', canvas.width/2, canvas.height/2 - 20);
+                ctx.font = '20px Arial';
+                ctx.fillText(`Điểm: ${score} - Chạm để chơi lại`, canvas.width/2, canvas.height/2 + 30);
+            }
         }
-        draw();
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        spawnObstacle();
+        gameLoop();
     </script>
 </body>
 </html>
